@@ -4,7 +4,14 @@
 //See all ramen images in the div with the id of ramen-menu.
 //get ramen-menu-div
 const ramenMenuDiv = document.getElementById("ramen-menu")
+const editRamenForm = document.getElementById("edit-ramen")
 const url = "http://localhost:3000/ramens"
+
+//Deliverable 5
+// we need a variable to store who the featured ramen is
+let featuredRamen = {}
+
+
 //When the page loads, request the data from the server to get all the ramen objects.
 //fetch to the server to GET ALL ramen objects 
 fetch(url)
@@ -18,6 +25,7 @@ fetch(url)
     // }
     // ramens.forEach((ramen) => {renderRamen(ramen)})
 
+    //Deliverable 4. - First advanced deliverable
     fillRamenDetail(ramens[0])
     ramens.forEach(renderRamen)
     
@@ -41,6 +49,9 @@ function renderRamen(ramen) {
     ramenImg.addEventListener("click", (evt) => {
         //what do we want to happen when we click on these....
         fillRamenDetail(ramen)
+        //if we wrote all the code for this here
+        //we could mvoe out to a function,
+        //then call it from our fetch above, to satisfy deliverable 4.
     
     })
 
@@ -56,20 +67,16 @@ function renderRamen(ramen) {
 
 // See all the info about that ramen displayed inside the #ramen-detail div 
 function fillRamenDetail(ramen){
+    //Deliverable 5.
+    //update featured ramen, ever time we feature one!
+    featuredRamen = ramen
+    editRamenForm["rating"].value = featuredRamen.rating
+    editRamenForm["new-comment"].value = featuredRamen.comment
+
     // Grab the ramen detail div
     const ramenDetailDiv = document.getElementById("ramen-detail")
-    
-    // grab the img, h2 and h3 tags that belong to ramen detail div.
-    
-    // 1 way: grab the elements by their class - from the detail div
-    const detailImg = ramenDetailDiv.getElementsByClassName("detail-image")[0]
-    //                or... = ramenDetailDiv.querySelector(".detail-image")
-    
-    // 2nd way: in our html, add id's to those tags, and grab them by those id's
-    // const detailImg = document.getElementById("ramen-detail-img")
-    
-    // 3rd way : access the div's children
-    // const detailImg = ramenDetailDiv.children[0]
+
+    const detailImg = ramenDetailDiv.children[0]
     detailImg.src = ramen.image
     detailImg.alt = ramen.name
     
@@ -99,25 +106,68 @@ newRamenForm.addEventListener("submit", (e)=>{
     // 3. create new ramen object
     // access the forms children by their names
     const newRamen = {
-        "name": e.target.name.value,
-        "restaurant":e.target.restaurant.value,
-        "image":e.target.image.value,
-        "rating": parseInt(e.target.rating.value),
-        "comment":e.target['new-comment'].value
+        "name": newRamenForm.name.value,
+        "restaurant":newRamenForm.restaurant.value,
+        "image":newRamenForm.image.value,
+        "rating": parseInt(newRamenForm.rating.value),
+        "comment":newRamenForm['new-comment'].value
     }
     // The new ramen should be added to the#ramen-menu div.
     // IF we wanted it to persist
     // POST it to the server
     // then pessimistically do the render
     renderRamen(newRamen)
-
-
 })
 
 // The new ramen does not need to persist; 
 // in other words, if you refresh the page, 
 // it's okay that the new ramen is no longer on the page.
 // ^^^ we don't need to do another fetch call!
+
+//deliverable 5.
+//Update the rating and comment for a ramen by submitting a form
+//No need to persist
+//1. get the form (at top of file)
+
+//2. add a submit listener
+editRamenForm.addEventListener("submit", (e)=>{
+    e.preventDefault()
+    //3. edit the ramen.
+    //e.target OR editRamenForm
+    //. nameOfInputField .
+    //value
+    const newRating = editRamenForm["rating"].value
+    const newComment = editRamenForm["new-comment"].value
+
+    // featuredRamen.rating = newRating
+    // featuredRamen.comment = newComment
+
+    //now we have a local version of the ramen we want to change
+    //fetch to Patch the old ramen
+    // let valuesToPatch = {
+    //     rating:newRating,
+    //     comment:newComment
+    // }
+    // if the comment is blank, remove it from valuesToPatch
+    // valuesToPatch.remove
+
+    fetch(url + "/" + featuredRamen.id, {
+        method: 'PATCH',
+        body: JSON.stringify({
+                rating:newRating,
+                comment:newComment
+            }),
+        headers: {
+            'Content-type': 'application/json',
+        },
+    })
+    .then((response) => response.json())
+    .then(fillRamenDetail);
+    // ^^^ this is pessimistic rendering
+
+    //This was optimistic! :
+    // fillRamenDetail(featuredRamen)
+})
 
 
 
